@@ -242,6 +242,12 @@ Lo cual no es en absoluto aleatorio, pese a que se generaron 500 valores, el cic
 hist(RANDVNN())
 ```
 
+Y si observamos el correlograma podemos ver como las distintias generaciones de números se correlacionan.
+
+```{r eval=T}
+acf(RANDVNN())
+```
+
 De esta forma, a simple vista podemos concluir que no simula una variable que pertenezca a $U(0,1)$ y que no es un buen generador, y la única razón para aprender sobre el es una razón didactica.
 
 ## Ejercicio 7:
