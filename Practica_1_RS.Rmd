@@ -1,0 +1,280 @@
+---
+title: "Practica 1"
+author: "Grupo 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.2. Generación de números pseudoaleatorios en R
+
+## Ejercicio 2:
+
+#### Sea $(X,Y)$ un vector aleatorio con distribución uniforme en el cuadrado $[-1,1]$x$[-1,1]$ de área 4.
+
+#### a) Aproximar mediante simulación $P(X+Y \leq 0)$ y compararla con la probabilidad teórica (obtenida aplicando la regla de Laplace área favorable/área posible)
+
+Al aplicar la regla de Laplace, se obtiene que el área favorable es un triangulo rectangulo con dos de sus lados iguales a 2, por lo que su área (base*altura/2) es igual a 2, y como el área posíble es igual a 4, se tiene que la probabilidad teórica es igual a 0.5. Ahora para comparar con el valor simulado:
+
+```{r eval=T}
+set.seed(1)
+n <- 10000
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+indice <- (x+y < 0)
+mean(indice)
+```
+
+Qué resulta estar cerca del valor teórico. Si lo ilustramos:
+
+```{r eval=T}
+color <- ifelse(indice,"black","red") # Vector de colores depediendo de si el ?ndice correspondiente es verdadero
+simbolo <- ifelse(indice,1,4)         # Vector de simbolos
+
+plot(x, y, pch = simbolo, col = color, xlim = c(-1, 1), ylim = c(-1, 1), xlab="X", ylab="Y", asp = 1) #asp = 1 para dibujar circulo
+symbols(0, 0, squares = 2, inches = FALSE, add = TRUE)
+```
+
+#### b) Aproximar el valor de $\pi$ mediante simulación a partir de $P(X^2+Y^2 \leq 1)$.
+
+Al aplicar la regla de Laplace, se obtiene que el área favorable es un círculo con radio 1, por lo que su área ($\pi*r^2$) es igual a $\pi$, y como el área posíble es igual a 4, se tiene que la probabilidad teórica es igual a $\pi/4$, por lo que para aproximar este valor, solo hace falta al resultado de la simulación multiplicarle por 4. Ahora para comparar con el valor simulado:
+
+```{r eval=T}
+set.seed(1)
+n <- 10000
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+indice <- (x^2+y^2 < 1)
+pi_aprox <- 4*mean(indice)
+pi_aprox
+```
+
+Cómo podemos apreciar, al aumentar el número de generaciones en 4 veces, la presición apenas aumenta:
+
+```{r eval=T}
+set.seed(1)
+n <- 40000
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+indice <- (x^2+y^2 < 1)
+pi_aprox <- 4*mean(indice)
+pi_aprox
+```
+
+Que se puede observar que no está tan cerca del valor teórico. Al ilustrar la simulación se tiene:
+
+```{r eval=T}
+color <- ifelse(indice,"black","red") # Vector de colores depediendo de si el ?ndice correspondiente es verdadero
+simbolo <- ifelse(indice,1,4)         # Vector de simbolos
+
+plot(x, y, pch = simbolo, col = color, xlim = c(-1, 1), ylim = c(-1, 1), xlab="X", ylab="Y", asp = 1) #asp = 1 para dibujar circulo
+symbols(0, 0, squares = 2, inches = FALSE, add = TRUE)
+```
+
+## Ejercicio 3:
+
+#### Consideremos el experimento de Bernoulli consistente en el lanzamiento de una moneda.
+
+#### a) Empleando la función sample, obtener 1000 simulaciones del lanzamiento de una moneda (0=cruz, 1=cara), supeniendo que no está truncada. Aproximar la probabilidad de cara a paritr de las simulaciones.
+
+```{r eval=T}
+set.seed(1)
+nsim <- 10000
+x <- sample(c(cara = 1, cruz = 0), nsim, replace = TRUE, prob = c(0.5,0.5))
+
+mean(x)
+
+barplot(100*table(x)/nsim) # Representar porcentajes 
+```
+
+Aquí se puede ver que en proporción, tienden a estar uniformemente distribuidas.
+
+#### b) En R pueden generarse valores de la distribución de Bernoulli mediante la función rbinom(sim, size=1, prob). Generar un gráfico de lineas considerando en el eje X el número de lanzamientos (de 1 a 1000) y en el eje Y la frecuencia relativa del suceso cara (puede ser recomendable emplear la función cumsum).
+
+```{r eval=T}
+nsim <- 10000
+p <- 0.4
+x <- rbinom(nsim, size = 1, prob = p)
+n <- 1:nsim
+
+plot(n, cumsum(x)/n, type="l", ylab="Proporción de caras", xlab="Número de lanzamientos", ylim=c(0,1))
+
+abline(h=p, lty=2, col="red")
+```
+
+Aquí podemos ver que la probabilidad tiende a 0.4.
+
+## Ejercicio 4:
+
+#### Simluar el paso de correitne a través del siguiente circuito, donde figuran las probabilidades que pase corriente por cada uno de los interruptores:
+
+#### Considerar que cada interruptor es una v.a. de Bernoulli independiente para simular 1000 valores de cada una de ellas.
+
+```{r eval=T}
+set.seed(1)
+nsim <- 10000
+
+x1 <- rbinom(nsim, size=1, prob=0.9)
+x2 <- rbinom(nsim, size=1, prob=0.8)
+z1 <- x1 | x2   # Operador l?gico "O"
+
+x3 <- rbinom(nsim, size=1, prob=0.6)
+x4 <- rbinom(nsim, size=1, prob=0.5)
+
+z2 <- x3 | x4
+
+z3 <- z1 | z2
+x5 <- rbinom(nsim, size=1, prob=0.7)
+
+fin <- z3 & x5  # Operador l?gico "Y"
+mean(fin)
+```
+
+## Ejercicio 5:
+
+#### En 1651, el Caballero de Méré le planteó una pregunta relacionada con las apuestas y los juegos de azar: ¿es ventajoso apostar a que en cuatro lanzamientos de un dado se obtiene al menos un seis? Este problema generó una fructífera correspondencia entre Pascal y Fermat que se considera, simbólicamente, como el nacimiento del Cálculo de Probabilidades.
+
+#### a) Escribir una función que simule el lanzamiento de n dados. El parámetro de entrada es el número de lanzamientos n, que toma el valor 4 por defecto, y la salida debe ser TRUE si se obtiene al menos un 6 y FALSE en caso contrario.
+
+```{r eval=T}
+deMere <- function(n = 4){
+  lanz <- sample(1:6, replace=TRUE, size=n)
+  return(6 %in% lanz)
+}
+```
+
+#### b) Utilizar la función anterior para simular nsim=10000 jugadas de este juego y calcular la proporción de veces que se fana la apuesta (obtener al menos un 6 en n lanzamientos), usando n=4. Comparar el resultado con la probabilidad teórica $1-(5/6)^n$
+
+```{r eval=T}
+set.seed(1)
+n <- 4
+nsim <- 10000
+mean(replicate(nsim, deMere(n)))
+1-(5/6)^n
+```
+
+Donde podemos ver que la simulación tiene por lo menos dos cifras de precisión.
+
+# 1.3. Ejercicios de fin de práctica
+
+## Ejercicio 6:
+
+#### Uno de los primeros generadores fué el denominado método de los cuadrados medios propuesto por Von Neumann (1946). Con este procedimiento se generan números pseudaleatorios de 4 dígitos de la siguiente forma:
+
+##### i. Se escoge un número de cuatro dígitos $x_0$ (semilla).
+##### ii. Se eleva al cuadrado ($x_0^2$) y se toman los cuatro dígitos centrales ($x_1$).
+##### iii. Se genera el número pseudo-aleatorio como
+
+##### $u_1=x_1/10^4$
+
+##### iv. Volver al paso ii y repetir el proceso.
+
+##### Para obtener los k (número par) dígitos centrales de $x_i^2$ se puede utilizar que:
+
+...
+
+##### El algoritmo está implementado en el fichero RANDVN.R. Estudiar las características del gnerador de uadrados medios a partir de una secuencia de 500 valores obtenidos tomando como semilla unicial los cuatro primeros dígitos de la cédula. Emplear únicamente métodos gráficos.
+
+```{r eval=T}
+# ==================================================================
+# Generador Von Neumann de n?meros pseudoaleatorios
+# ==================================================================
+
+# Borrar todos los objetos (problemas semilla)
+rm(list=ls(all=TRUE))
+
+# ------------------------------------------------------------------
+# initRANDVN(semilla,n)
+#   Inicia el generador 
+#   n n?mero de digitos centrales, 4 por defecto (debe ser un n? par)
+#   Por defecto semilla del reloj
+#   OJO: No se hace ninguna verificaci?n de los par?metros
+# ------------------------------------------------------------------
+initRANDVN <- function(semilla=as.numeric(1804), n=4) {
+  .semilla <<- as.double(semilla) %% 10^n  #Cálculos en doble precisión
+  .n <<- n
+  .aux <<- 10^(2*n-n/2)
+  .aux2 <<- 10^(n/2)
+  return(invisible(list(semilla=.semilla,n=.n)))
+}
+
+# ------------------------------------------------------------------
+# RANDVN()
+#   Genera un valor pseudoaleatorio con el generador de Von Neumann
+#   Actualiza la semilla (si no existe llama a initRANDVN)
+# ------------------------------------------------------------------
+RANDVN <- function() {
+    if (!exists(".semilla", envir=globalenv())) initRANDVN()
+    z <- .semilla^2
+    .semilla <<- trunc((z-trunc(z/.aux)*.aux)/.aux2)
+    return(.semilla/10^.n)
+}
+
+# ------------------------------------------------------------------
+# RANDVNN(n)
+#   Genera un vector de valores pseudoaleatorios con el generador congruencial
+#   (por defecto de dimensi?n 1000)
+#   Actualiza la semilla (si no existe llama a initRANDVN)
+# ------------------------------------------------------------------
+RANDVNN <- function(n=500) {
+    x <- numeric(n)
+    for(i in 1:n) x[i] <- RANDVN()
+    return(x)
+    # return(replicate(n,RANDVN()))  # Alternativa más rápida
+}
+```
+
+Utilicemos un gráfico en 3 dimenciones para poder observar el comportamiento de este generador:
+
+```{r eval=T}
+xyz <- matrix(RANDVNN(), ncol = 3, byrow = TRUE)
+
+library(plot3D)
+points3D(xyz[,1], xyz[,2], xyz[,3], colvar = NULL, phi = 60, 
+         theta = -50, pch = 21, cex = 0.2)
+```
+
+Lo cual no es en absoluto aleatorio, pese a que se generaron 500 valores, el ciclo es muy corto, y la mayoria de esos valores son repetidos, lo que se puede apreciar en el siguiente histograma.
+
+```{r eval=T}
+hist(RANDVNN())
+```
+
+De esta forma, a simple vista podemos concluir que no simula una variable que pertenezca a $U(0,1)$ y que no es un buen generador, y la única razón para aprender sobre el es una razón didactica.
+
+## Ejercicio 7:
+
+#### Considerando el generador congruencial multiplicativo de parámetros $a=7^5=16807$, $c=0$ y $m=2^31 - 1$:
+
+```{r eval=T}
+GEN_CONG <- function(n=500,x_0=1804){
+  x <- numeric(n)
+  x[1]=x_0
+    for(i in 2:n) x[i] <- (16807*x[i-1] %% 2147483647) %% 2147483647
+  x <- x/2147483647
+    return(x)
+}
+```
+
+##### a) ¿Se observan los mismos problemas que con el algoritmo RANDU al considerar tripletas ($x_k$,$x_k+1$,$x_k+2$)?
+
+```{r eval=T}
+xyz <- matrix(GEN_CONG(), ncol = 3, byrow = TRUE)
+
+library(plot3D)
+points3D(xyz[,1], xyz[,2], xyz[,3], colvar = NULL, phi = 60, 
+         theta = -50, pch = 21, cex = 0.2)
+```
+
+Podemos ver que no se observan los mismos problemas, pues los puntos en el plot se ven más dispersos que con el generador RANDU.
+
+##### b) Esudiar la aleatoriedad de este generador empleado repetidamente al test de Ljung-Box, considerando 500 pruebas con muestras de tamaño 50 y hasta el salto 10 (Box.test(u,lag=10,type="Ljung")). Comparar gráficamente el ajuste de las distribuciones del estadístico y p-valor a las de referencia.
+
+```{r eval=T}
+acf(GEN_CONG())
+Box.test(GEN_CONG(), lag = 10, type = "Ljung")
+```
+
+Donde si podemos observar el p-valor es muy alto, por lo que hariamos bien en suponer independencia entre generaciones.
